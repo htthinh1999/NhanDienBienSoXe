@@ -36,12 +36,12 @@ namespace LicensePlateDetector_Original
 
         private void ProcessImage(IInputOutputArray image)
         {
-            Stopwatch watch = Stopwatch.StartNew(); // time the detection process
-            List<IInputOutputArray> licensePlateImagesList = new List<IInputOutputArray>();
-            List<IInputOutputArray> filteredLicensePlateImagesList = new List<IInputOutputArray>();
-            List<RotatedRect> licenseBoxList = new List<RotatedRect>();
-            List<string> words = _licensePlateDetector.DetectLicensePlate(
-               image,
+            Stopwatch watch = Stopwatch.StartNew(); // Đếm thời gian
+            List<IInputOutputArray> licensePlateImagesList = new List<IInputOutputArray>();//danh sách các ảnh có thể là biển số(hcn)
+            List<IInputOutputArray> filteredLicensePlateImagesList = new List<IInputOutputArray>();// danh sách các ảnh đã được lọc nhiễu
+            List<RotatedRect> licenseBoxList = new List<RotatedRect>();//Vị trí các bức ảnh  
+            List<string> words = _licensePlateDetector.DetectLicensePlate( //Tìm kiếm các kí tự của ảnh có thể là biển số 
+                image,
                licensePlateImagesList,
                filteredLicensePlateImagesList,
                licenseBoxList);
@@ -79,8 +79,8 @@ namespace LicensePlateDetector_Original
                 MessageBox.Show("Lỗi không thể nhận dạng!\nMời bạn chọn ảnh khác!", "Không thể nhận dạng được biển số!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return; 
             }
-            int index = words.IndexOf(_licensePlateDetector.listWordsLongest[_licensePlateDetector.listWordsLongest.Count - 1]);
-            IInputOutputArray plateDrawed = _licensePlateDetector.Segmentation(licensePlateImagesList[index]);
+            int index = words.IndexOf(_licensePlateDetector.listWordsLongest[_licensePlateDetector.listWordsLongest.Count - 1]);//vị trí ảnh có số lượng kí tự dài nhất (có thể là ảnh biển số)
+            IInputOutputArray plateDrawed = _licensePlateDetector.Segmentation(licensePlateImagesList[index]);// vẽ vị trí 
             images.Add(_licensePlateDetector.listPlateROIs[_licensePlateDetector.listWordsLongest[_licensePlateDetector.listWordsLongest.Count-1]]);
             images.Add(licensePlateImagesList[index]);
             images.Add(filteredLicensePlateImagesList[index]);
@@ -90,7 +90,7 @@ namespace LicensePlateDetector_Original
                    String.Format("Biển số: {0}", _licensePlateDetector.listWordsLongest[_licensePlateDetector.listWordsLongest.Count - 1]),
                    images);
 
-            // Draw Red for license plate
+            // Khoanh vùng đỏ biển số xe
             PointF[] verticesF = licenseBoxList[index].GetVertices();
             Point[] vertices = Array.ConvertAll(verticesF, Point.Round);
             using (VectorOfPoint pts = new VectorOfPoint(vertices))

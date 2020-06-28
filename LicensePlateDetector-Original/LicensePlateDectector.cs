@@ -22,7 +22,7 @@ namespace LicensePlateDetector_Original
 
         public List<string> listWordsLongest = new List<string>();
         public Dictionary<string, IInputOutputArray> listPlateROIs = new Dictionary<string, IInputOutputArray>();
-        public Dictionary<IInputOutputArray, IInputOutputArray> listPlateROIsDrawed = new Dictionary<IInputOutputArray, IInputOutputArray>();
+        public Dictionary<IInputOutputArray, IInputOutputArray> listPlateROIsColor = new Dictionary<IInputOutputArray, IInputOutputArray>();
 
         public IInputArray image;
         public IInputOutputArray plateROI = new Mat();
@@ -295,7 +295,7 @@ namespace LicensePlateDetector_Original
                             {
                                 listWordsLongest.Add(strBuilder.ToString());
                                 listPlateROIs.Add(strBuilder.ToString(), plateROI);
-                                listPlateROIsDrawed.Add(plate, plateROI_Drawed);
+                                listPlateROIsColor.Add(plate, plateROI_Drawed);
                             }
                         }
                     }
@@ -358,7 +358,7 @@ namespace LicensePlateDetector_Original
         public IInputOutputArray Segmentation(IInputOutputArray image)
         {
             IInputOutputArray plate_cut = image;
-            //CvInvoke.CvtColor(plate_cut, plate_cut, Emgu.CV.CvEnum.ColorConversion.Bgr2Gray);
+   
             //CvInvoke.Imshow("test6", plate_cut);
             IOutputArray plate_blur = new Mat();
             CvInvoke.GaussianBlur(plate_cut, plate_blur, new Size(3, 3), 1); //làm mịn ảnh
@@ -374,31 +374,31 @@ namespace LicensePlateDetector_Original
             IOutputArray plate_hier = new Mat();
             CvInvoke.FindContours(plate_thres_mor, plate_contour, plate_hier, Emgu.CV.CvEnum.RetrType.External, Emgu.CV.CvEnum.ChainApproxMethod.ChainApproxSimple); //tìm contour chữ và số
             
-            IInputOutputArray plate_draw = listPlateROIsDrawed[image];
-            //CvInvoke.DrawContours(plate_draw, plate_contour, -1, new MCvScalar(0, 255, 0), 1); //vẽ contour bao quanh ký tự
+            IInputOutputArray plate_draw = listPlateROIsColor[image]; // ảnh gốc biển số bị cắt rời
+         
             //CvInvoke.Imshow("test10", plate_draw);
             // Khoanh vung chu
-            Dictionary<double, int> areas_ind = new Dictionary<double, int>();
+            Dictionary<double, int> areas_ind = new Dictionary<double, int>(); // lưu diện tích contour và vị trí contour
             List<double> areas = new List<double>();
             for (int i = 0; i < plate_contour.Size; i++)
             {
                 double area = CvInvoke.ContourArea(plate_contour[i]);
-                areas_ind[area] = i;
-                areas.Add(area);
+                areas_ind[area] = i; // lưu vị trí 
+                areas.Add(area); // thêm diện tích contour  
             }
-            areas.Sort((a, b) => b.CompareTo(a));
+            areas.Sort((a, b) => b.CompareTo(a)); // sắp xếp diện tích các contour từ lớn đến nhỏ
             List<double> areas1 = new List<double>();
             for (int i = 0; i < Math.Min(10, areas.Count); i++)
             {
-                areas1.Add(areas[i]);
+                areas1.Add(areas[i]); // thêm diện tích 10 contour đầu tiên sau khi sắp xếp
             }
             for (int i = 0; i < areas1.Count; i++)
             {
-                Rectangle rectangle = CvInvoke.BoundingRectangle(plate_contour[areas_ind[areas1[i]]]);
+                Rectangle rectangle = CvInvoke.BoundingRectangle(plate_contour[areas_ind[areas1[i]]]); // khung bao quanh kí tự
                 CvInvoke.Rectangle(plate_draw,
                     //new Rectangle(rectangle.X, rectangle.Y, rectangle.X + rectangle.Width, rectangle.Y + rectangle.Height),
                     rectangle,
-                    new MCvScalar(0, 255, 0), 2);
+                    new MCvScalar(0, 255, 0), 2); 
             }
             //CvInvoke.Imshow("Segmentation", plate_draw);
             return plate_draw;
